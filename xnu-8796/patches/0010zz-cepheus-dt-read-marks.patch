@@ -1,25 +1,36 @@
 diff --git a/osfmk/arm/arm_init.c b/osfmk/arm/arm_init.c
-index 77480a1..f1823a0 100644
+index 77480a1..a6cc448 100644
 --- a/osfmk/arm/arm_init.c
 +++ b/osfmk/arm/arm_init.c
-@@ -440,9 +440,12 @@ extern const char cepheus_tag_fix[];
+@@ -440,9 +440,21 @@ extern const char cepheus_tag_fix[];
  		unsigned long dtpA = pa + 0x1000UL;
  		volatile unsigned int *headB = (volatile unsigned int *)(uintptr_t)dtpB;
  		volatile unsigned int *headA = (volatile unsigned int *)(uintptr_t)dtpA;
-+		cepheus_early_mark(21, "before headA read (argsPA+0x1000)");
++		/*
++		 * Candidate B (dtk - gVirtBase) is only meaningful when it lands
++		 * inside DRAM.  On this handoff it decodes to 0x084d1000, which is
++		 * *below* the SM8150 DRAM base of 0x80000000, so dereferencing it
++		 * faults before the console can say anything.  Bounds-check it
++		 * against the platform RAM base the ADT publishes and fall back to
++		 * the argsPA+0x1000 convention the pinned DarwinBoot uses.
++		 */
++		int dtpB_in_ram = dtpB >= 0x80000000UL;
++		cepheus_early_mark(20, "A: before headA read");
  		unsigned int magicA = headA[0];
-+		cepheus_early_mark(22, "before headB read (treePA)");
- 		unsigned int magicB = headB[0];
- 		unsigned int rootB1 = headB[1];
-+		cepheus_early_mark(23, "headA+headB reads returned");
+-		unsigned int magicB = headB[0];
+-		unsigned int rootB1 = headB[1];
++		cepheus_early_mark(20, "B: before headB read");
++		unsigned int magicB = dtpB_in_ram ? headB[0] : 0;
++		unsigned int rootB1 = dtpB_in_ram ? headB[1] : 0;
++		cepheus_early_mark(20, "C: headA+headB returned");
  		unsigned long dtp = dtpB;
  
  		if (magicB == 0xd00dfeedu) {
-@@ -463,6 +466,7 @@ extern const char cepheus_tag_fix[];
+@@ -463,6 +475,7 @@ extern const char cepheus_tag_fix[];
  		cepheus_dt_head[5] = rootB1;
  		cepheus_dt_head[6] = dtp;
  		cepheus_early_boot_dump(cepheus_dt_head, cepheus_tag_fix);
-+		cepheus_early_mark(24, "dtfix dump returned");
++		cepheus_early_mark(20, "D: dtfix dump returned");
  
  		for (int di = 0; di < 20; di++) {
  			cepheus_dt_head[di] = ((volatile unsigned long *)dtp)[di];
