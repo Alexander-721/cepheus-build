@@ -1,34 +1,28 @@
 diff --git a/osfmk/arm64/cpu.c b/osfmk/arm64/cpu.c
-index 25fde23..ea57bd0 100644
+index 25fde23..2fca6e9 100644
 --- a/osfmk/arm64/cpu.c
 +++ b/osfmk/arm64/cpu.c
-@@ -636,7 +636,9 @@ cpu_idle_exit(boolean_t from_reset)
- 	uint64_t        new_idle_timeout_ticks = 0x0ULL;
- 	cpu_data_t     *cpu_data_ptr = getCpuDatap();
+@@ -1,3 +1,6 @@
++/* CEPHEUS bring-up: early console markers (see arm_init.c). */
++extern void cepheus_early_mark(unsigned int stage, const char *label);
++
+ /*
+  * Copyright (c) 2007-2021 Apple Inc. All rights reserved.
+  *
+@@ -679,9 +682,12 @@ cpu_init(void)
+ 	cpu_data_t     *cdp = getCpuDatap();
+ 	arm_cpu_info_t *cpu_info_p;
  
 +	cepheus_early_mark(20, "E: cpu_init enter");
  	assert(exception_stack_pointer() != 0);
 +	cepheus_early_mark(20, "F: excep stack ok");
- 
- 	/* Back from WFI, unlock OSLAR and EDLAR. */
- 	if (from_reset) {
-@@ -673,6 +675,7 @@ cpu_idle_exit(boolean_t from_reset)
- 	Idle_load_context();
- }
- 
-+extern void cepheus_early_mark(unsigned int stage, const char *label);
- void
- cpu_init(void)
- {
-@@ -682,6 +685,7 @@ cpu_init(void)
- 	assert(exception_stack_pointer() != 0);
  
  	if (cdp->cpu_type != CPU_TYPE_ARM64) {
 +		cepheus_early_mark(20, "G: first cpu init");
  		cdp->cpu_type = CPU_TYPE_ARM64;
  
  		timer_call_queue_init(&cdp->rtclock_timer.queue);
-@@ -689,7 +693,9 @@ cpu_init(void)
+@@ -689,7 +695,9 @@ cpu_init(void)
  
  		if (cdp == &BootCpuData) {
  			do_cpuid();
@@ -38,7 +32,7 @@ index 25fde23..ea57bd0 100644
  		} else {
  			/*
  			 * We initialize non-boot CPUs here; the boot CPU is
-@@ -699,11 +705,14 @@ cpu_init(void)
+@@ -699,11 +707,14 @@ cpu_init(void)
  		}
  
  		do_cacheid();
@@ -53,7 +47,7 @@ index 25fde23..ea57bd0 100644
  
  		/* switch based on CPU's reported architecture */
  		switch (cpu_info_p->arm_info.arm_arch) {
-@@ -720,6 +729,7 @@ cpu_init(void)
+@@ -720,6 +731,7 @@ cpu_init(void)
  			break;
  		}
  
@@ -61,7 +55,7 @@ index 25fde23..ea57bd0 100644
  		cdp->cpu_threadtype = CPU_THREADTYPE_NONE;
  	}
  	cdp->cpu_stat.irq_ex_cnt_wake = 0;
-@@ -731,10 +741,14 @@ cpu_init(void)
+@@ -731,10 +743,14 @@ cpu_init(void)
  	cdp->cpu_sleep_token_last = cdp->cpu_sleep_token;
  	cdp->cpu_sleep_token = 0x0UL;
  #if KPC
