@@ -40,7 +40,7 @@ env:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 150
     # The repository default is read-only ("Contents: read"). The release step
     # needs contents:write to create the k8796-<run_id> release; without this
