@@ -1,0 +1,52 @@
+diff --git a/osfmk/arm/cpuid.c b/osfmk/arm/cpuid.c
+index a2fcff1..875a025 100644
+--- a/osfmk/arm/cpuid.c
++++ b/osfmk/arm/cpuid.c
+@@ -1,3 +1,6 @@
++/* CEPHEUS bring-up: early console markers. */
++extern void cepheus_early_mark(unsigned int stage, const char *label);
++
+ /*
+  * Copyright (c) 2007-2016 Apple Inc. All rights reserved.
+  *
+@@ -295,16 +298,21 @@ do_cacheid(void)
+ 	 * We only need to parse cache geometry parameters once per cluster type.
+ 	 * Skip this if some other core of the same type has already parsed them.
+ 	 */
++	cepheus_early_mark(20, "S: cacheid enter");
+ 	cluster_type_t cluster_type = ml_get_topology_info()->cpus[ml_get_cpu_number_local()].cluster_type;
+ 	uint8_t prev_cpuid_cache_info_bitmap = os_atomic_or_orig(&cpuid_cache_info_bitmap,
+ 	    (uint8_t)(1 << cluster_type), acq_rel);
++	cepheus_early_mark(20, "T: after atomic or");
+ 	if (prev_cpuid_cache_info_bitmap & (1 << cluster_type)) {
++		cepheus_early_mark(20, "U: cluster already parsed");
+ 		return;
+ 	}
+ 
+ 	cache_info_t *cpuid_cache_info_p = &cpuid_cache_info[cluster_type];
+ 
++	cepheus_early_mark(20, "V: before read clidr");
+ 	arm_cache_clidr_info.value = machine_read_clidr();
++	cepheus_early_mark(20, "W: after read clidr");
+ 
+ 	/*
+ 	 * For compatibility purposes with existing callers, let's cache the boot CPU
+@@ -317,7 +325,9 @@ do_cacheid(void)
+ 	/* Select L1 data/unified cache */
+ 
+ 	machine_write_csselr(CSSELR_L1, CSSELR_DATA_UNIFIED);
++	cepheus_early_mark(20, "X: before read ccsidr");
+ 	arm_cache_ccsidr_info.value = machine_read_ccsidr();
++	cepheus_early_mark(20, "Y: after read ccsidr");
+ 
+ 	cpuid_cache_info_p->c_unified = (arm_cache_clidr_info.bits.Ctype1 == 0x4) ? 1 : 0;
+ 
+@@ -417,6 +427,8 @@ do_cacheid(void)
+ 	    (cpuid_cache_info_p->c_unified) ? "unified" : "separate",
+ 	    cpuid_cache_info_p->c_assoc,
+ 	    cpuid_cache_info_p->c_linesz);
++	cepheus_early_mark(20, "Z: cacheid done");
++
+ }
+ 
+ cache_info_t   *
