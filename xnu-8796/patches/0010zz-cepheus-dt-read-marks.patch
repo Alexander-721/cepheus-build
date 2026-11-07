@@ -1,8 +1,8 @@
 diff --git a/osfmk/arm/arm_init.c b/osfmk/arm/arm_init.c
-index 77480a1..a6cc448 100644
+index 77480a1..88ab254 100644
 --- a/osfmk/arm/arm_init.c
 +++ b/osfmk/arm/arm_init.c
-@@ -440,9 +440,21 @@ extern const char cepheus_tag_fix[];
+@@ -440,34 +440,51 @@ extern const char cepheus_tag_fix[];
  		unsigned long dtpA = pa + 0x1000UL;
  		volatile unsigned int *headB = (volatile unsigned int *)(uintptr_t)dtpB;
  		volatile unsigned int *headA = (volatile unsigned int *)(uintptr_t)dtpA;
@@ -19,18 +19,53 @@ index 77480a1..a6cc448 100644
  		unsigned int magicA = headA[0];
 -		unsigned int magicB = headB[0];
 -		unsigned int rootB1 = headB[1];
+-		unsigned long dtp = dtpB;
 +		cepheus_early_mark(20, "B: before headB read");
 +		unsigned int magicB = dtpB_in_ram ? headB[0] : 0;
 +		unsigned int rootB1 = dtpB_in_ram ? headB[1] : 0;
 +		cepheus_early_mark(20, "C: headA+headB returned");
- 		unsigned long dtp = dtpB;
++		unsigned long dtp;
  
++		/*
++		 * The console dumps that used to run here faulted before printing a
++		 * single character, so encode the decision in the mark label instead:
++		 * the last "EARLY 20: D ..." line says which candidate was chosen.
++		 * Falling through to dtpA is deliberate: dtpB decodes below DRAM on
++		 * this handoff and only survives the bounds check by accident.
++		 */
  		if (magicB == 0xd00dfeedu) {
-@@ -463,6 +475,7 @@ extern const char cepheus_tag_fix[];
- 		cepheus_dt_head[5] = rootB1;
- 		cepheus_dt_head[6] = dtp;
- 		cepheus_early_boot_dump(cepheus_dt_head, cepheus_tag_fix);
-+		cepheus_early_mark(20, "D: dtfix dump returned");
+ 			dtp = dtpB;
++			cepheus_early_mark(20, "D: tree B has fdt magic");
+ 		} else if (magicA == 0xd00dfeedu) {
+ 			dtp = dtpA;
+-		} else if (magicB < 0x100000u && rootB1 < 0x100000u && magicB != 0) {
++			cepheus_early_mark(20, "D: tree A has fdt magic");
++		} else if (dtpB_in_ram && magicB < 0x100000u && rootB1 < 0x100000u && magicB != 0) {
+ 			/* Apple-format tree: root {nProperties, nChildren} both small. */
+ 			dtp = dtpB;
++			cepheus_early_mark(20, "D: tree B apple format");
++		} else {
++			dtp = dtpA;
++			cepheus_early_mark(20, "D: fallback to argsPA+0x1000");
+ 		}
+-		/* Diagnostic record through the exported dump helper (the string
+-		 * helpers are file-static in cepheus_early.c). */
+-		cepheus_dt_head[0] = dtk;
+-		cepheus_dt_head[1] = dtl;
+-		cepheus_dt_head[2] = pa;
+-		cepheus_dt_head[3] = pb;
+-		cepheus_dt_head[4] = ((unsigned long)magicB << 32) | magicA;
+-		cepheus_dt_head[5] = rootB1;
+-		cepheus_dt_head[6] = dtp;
+-		cepheus_early_boot_dump(cepheus_dt_head, cepheus_tag_fix);
  
  		for (int di = 0; di < 20; di++) {
++			if (dtp < 0x80000000UL) {
++				break;
++			}
  			cepheus_dt_head[di] = ((volatile unsigned long *)dtp)[di];
+ 		}
+-		cepheus_early_boot_dump(cepheus_dt_head, cepheus_tag_dt);
+ 		ac[0x60 / sizeof(unsigned long)] = dtp;
+ 	}
+ #endif
