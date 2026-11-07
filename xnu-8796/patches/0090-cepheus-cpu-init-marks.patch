@@ -1,0 +1,78 @@
+diff --git a/osfmk/arm64/cpu.c b/osfmk/arm64/cpu.c
+index 25fde23..ea57bd0 100644
+--- a/osfmk/arm64/cpu.c
++++ b/osfmk/arm64/cpu.c
+@@ -636,7 +636,9 @@ cpu_idle_exit(boolean_t from_reset)
+ 	uint64_t        new_idle_timeout_ticks = 0x0ULL;
+ 	cpu_data_t     *cpu_data_ptr = getCpuDatap();
+ 
++	cepheus_early_mark(20, "E: cpu_init enter");
+ 	assert(exception_stack_pointer() != 0);
++	cepheus_early_mark(20, "F: excep stack ok");
+ 
+ 	/* Back from WFI, unlock OSLAR and EDLAR. */
+ 	if (from_reset) {
+@@ -673,6 +675,7 @@ cpu_idle_exit(boolean_t from_reset)
+ 	Idle_load_context();
+ }
+ 
++extern void cepheus_early_mark(unsigned int stage, const char *label);
+ void
+ cpu_init(void)
+ {
+@@ -682,6 +685,7 @@ cpu_init(void)
+ 	assert(exception_stack_pointer() != 0);
+ 
+ 	if (cdp->cpu_type != CPU_TYPE_ARM64) {
++		cepheus_early_mark(20, "G: first cpu init");
+ 		cdp->cpu_type = CPU_TYPE_ARM64;
+ 
+ 		timer_call_queue_init(&cdp->rtclock_timer.queue);
+@@ -689,7 +693,9 @@ cpu_init(void)
+ 
+ 		if (cdp == &BootCpuData) {
+ 			do_cpuid();
++			cepheus_early_mark(20, "H: after do_cpuid");
+ 			do_mvfpid();
++			cepheus_early_mark(20, "I: after do_mvfpid");
+ 		} else {
+ 			/*
+ 			 * We initialize non-boot CPUs here; the boot CPU is
+@@ -699,11 +705,14 @@ cpu_init(void)
+ 		}
+ 
+ 		do_cacheid();
++		cepheus_early_mark(20, "J: after do_cacheid");
+ 
+ 		/* ARM_SMP: Assuming identical cpu */
+ 		do_debugid();
++		cepheus_early_mark(20, "K: after do_debugid");
+ 
+ 		cpu_info_p = cpuid_info();
++		cepheus_early_mark(20, "L: after cpuid_info");
+ 
+ 		/* switch based on CPU's reported architecture */
+ 		switch (cpu_info_p->arm_info.arm_arch) {
+@@ -720,6 +729,7 @@ cpu_init(void)
+ 			break;
+ 		}
+ 
++		cepheus_early_mark(20, "M: arch switch done");
+ 		cdp->cpu_threadtype = CPU_THREADTYPE_NONE;
+ 	}
+ 	cdp->cpu_stat.irq_ex_cnt_wake = 0;
+@@ -731,10 +741,14 @@ cpu_init(void)
+ 	cdp->cpu_sleep_token_last = cdp->cpu_sleep_token;
+ 	cdp->cpu_sleep_token = 0x0UL;
+ #if KPC
++	cepheus_early_mark(20, "N: before kpc_idle_exit");
+ 	kpc_idle_exit();
++	cepheus_early_mark(20, "O: after kpc_idle_exit");
+ #endif /* KPC */
+ #if MONOTONIC
++	cepheus_early_mark(20, "P: before mt_cpu_up");
+ 	mt_cpu_up(cdp);
++	cepheus_early_mark(20, "Q: after mt_cpu_up");
+ #endif /* MONOTONIC */
+ }
+ 
