@@ -1,0 +1,52 @@
+diff --git a/osfmk/arm64/arm_vm_init.c b/osfmk/arm64/arm_vm_init.c
+index 30c896d..c50e8b7 100644
+--- a/osfmk/arm64/arm_vm_init.c
++++ b/osfmk/arm64/arm_vm_init.c
+@@ -1874,10 +1874,12 @@ arm_vm_init(uint64_t memory_size, boot_args * args)
+ #endif
+ 
+ 	// Slide the physical aperture to a random page-aligned location within the slide range
++	cepheus_early_mark(20, "W1: physmap base computed");
+ 	uint64_t physmap_slide = early_random() & ARM64_PHYSMAP_SLIDE_MASK & ~((uint64_t)PAGE_MASK);
+ 	assert(physmap_slide < ARM64_PHYSMAP_SLIDE_RANGE);
+ 
+ 	physmap_base += physmap_slide;
++	cepheus_early_mark(20, "W2: physmap slide applied");
+ 
+ #if XNU_MONITOR
+ 	physmap_base = ROUND_TWIG(physmap_base);
+@@ -1919,8 +1921,10 @@ arm_vm_init(uint64_t memory_size, boot_args * args)
+ 		panic("Unsupported memory configuration %lx", mem_size);
+ 	}
+ 
++	cepheus_early_mark(20, "W3: memory layout ok");
+ 	boot_tte = (tt_entry_t *)&bootstrap_pagetables;
+ 	boot_ttep = kvtophys((vm_offset_t)boot_tte);
++	cepheus_early_mark(20, "W4: bootstrap tables located");
+ 
+ #if DEVELOPMENT || DEBUG
+ 	/* Sanity check - assert that BOOTSTRAP_TABLE_SIZE is sufficiently-large to
+@@ -1945,6 +1949,7 @@ arm_vm_init(uint64_t memory_size, boot_args * args)
+ 	 * after bootstrap complete, xnu can warm start with a single 16KB page mapping
+ 	 * to trampoline to KVA. this requires only 3 pages to stay resident.
+ 	 */
++	cepheus_early_mark(20, "W5: sanity check passed");
+ 	avail_start = args->topOfKernelData;
+ 
+ #if defined(KERNEL_INTEGRITY_KTRR) || defined(KERNEL_INTEGRITY_CTRR)
+@@ -1955,6 +1960,7 @@ arm_vm_init(uint64_t memory_size, boot_args * args)
+ 	invalid_tte = (tt_entry_t *)alloc_ptpage(TRUE);
+ 	invalid_ttep = kvtophys((vm_offset_t)invalid_tte);
+ 	bzero(invalid_tte, ARM_PGBYTES);
++	cepheus_early_mark(20, "W6: invalid tte ready");
+ 
+ 	/*
+ 	 * Initialize l1 page table page
+@@ -1962,6 +1968,7 @@ arm_vm_init(uint64_t memory_size, boot_args * args)
+ 	cpu_tte = (tt_entry_t *)alloc_ptpage(TRUE);
+ 	cpu_ttep = kvtophys((vm_offset_t)cpu_tte);
+ 	bzero(cpu_tte, ARM_PGBYTES);
++	cepheus_early_mark(20, "W7: cpu tte ready");
+ 	avail_end = gPhysBase + mem_size;
+ 	assert(!(avail_end & PAGE_MASK));
+ 
