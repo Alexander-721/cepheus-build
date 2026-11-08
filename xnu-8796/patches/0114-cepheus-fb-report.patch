@@ -1,0 +1,61 @@
+diff --git a/osfmk/arm64/arm_vm_init.c b/osfmk/arm64/arm_vm_init.c
+index f2bc416..c50fa3a 100644
+--- a/osfmk/arm64/arm_vm_init.c
++++ b/osfmk/arm64/arm_vm_init.c
+@@ -2197,6 +2197,8 @@ arm_vm_init(uint64_t memory_size, boot_args * args)
+ 	if (early_fb_va != 0) {
+ 		cepheus_early_relocate(early_fb_va);
+ 	} else {
++		cepheus_early_fb_report(early_fb_pa, early_fb_bytes,
++		    ptov_table[0].pa, ptov_table[0].len);
+ 		cepheus_early_mark(8, "fb outside physmap; console off");
+ 		cepheus_early_disable();
+ 	}
+diff --git a/osfmk/arm64/cepheus_early.c b/osfmk/arm64/cepheus_early.c
+index c1c9d48..c54d81e 100644
+--- a/osfmk/arm64/cepheus_early.c
++++ b/osfmk/arm64/cepheus_early.c
+@@ -417,3 +417,17 @@ cepheus_early_disable(void)
+ 	__asm__ volatile("dsb sy" ::: "memory");
+ }
+ #endif /* CEPHEUS */
++
++void
++cepheus_early_fb_report(uintptr_t pa, uint64_t bytes, uintptr_t ptov_pa, uint64_t ptov_len)
++{
++	cepheus_early_string("\nCEPH FB pa=0x");
++	cepheus_early_hex(pa);
++	cepheus_early_string(" len=0x");
++	cepheus_early_hex((uintptr_t)bytes);
++	cepheus_early_string("\nCEPH PTOV pa=0x");
++	cepheus_early_hex(ptov_pa);
++	cepheus_early_string(" len=0x");
++	cepheus_early_hex((uintptr_t)ptov_len);
++	cepheus_early_putc('\n');
++}
+diff --git a/osfmk/arm64/cepheus_early.h b/osfmk/arm64/cepheus_early.h
+index 4c75797..004351b 100644
+--- a/osfmk/arm64/cepheus_early.h
++++ b/osfmk/arm64/cepheus_early.h
+@@ -24,6 +24,7 @@ void cepheus_early_putc(char c);
+ void cepheus_early_panic(const char *fmt, va_list *args);
+ uintptr_t cepheus_early_fb_phys(void);
+ uint64_t cepheus_early_fb_bytes(void);
++void cepheus_early_fb_report(uintptr_t pa, uint64_t bytes, uintptr_t ptov_pa, uint64_t ptov_len);
+ void cepheus_early_relocate(uintptr_t base);
+ void cepheus_early_disable(void);
+ #else
+@@ -48,6 +49,13 @@ static inline uint64_t cepheus_early_fb_bytes(void)
+ {
+ 	return 0;
+ }
++static inline void cepheus_early_fb_report(uintptr_t pa, uint64_t bytes, uintptr_t ptov_pa, uint64_t ptov_len)
++{
++	(void)pa;
++	(void)bytes;
++	(void)ptov_pa;
++	(void)ptov_len;
++}
+ static inline void cepheus_early_relocate(uintptr_t base)
+ {
+ 	(void)base;
