@@ -1,0 +1,14 @@
+diff --git a/osfmk/kern/processor.c b/osfmk/kern/processor.c
+index 1eee2a9..8f5c240 100644
+--- a/osfmk/kern/processor.c
++++ b/osfmk/kern/processor.c
+@@ -459,7 +459,9 @@ processor_state_update_idle(processor_t processor)
+ 	bit_clear(processor->processor_set->cpu_running_cluster_shared_rsrc_thread[CLUSTER_SHARED_RSRC_TYPE_RR], processor->cpu_id);
+ 	bit_clear(processor->processor_set->cpu_running_cluster_shared_rsrc_thread[CLUSTER_SHARED_RSRC_TYPE_NATIVE_FIRST], processor->cpu_id);
+ #endif /* CONFIG_SCHED_EDGE */
++	cepheus_early_mark(20, "R1: calling load average");
+ 	sched_update_pset_load_average(processor->processor_set, 0);
++	cepheus_early_mark(20, "R2: load average returned");
+ }
+ 
+ void
