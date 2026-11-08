@@ -146,6 +146,29 @@ jobs:
               rc=1
             fi
           done
+
+          # blacktop's log prints "Applying patch:" even for patches that then
+          # fail, so log lines alone cannot prove the code landed. Assert on the
+          # patched sources themselves; a missing marker means this build would
+          # flash a kernel without the bring-up changes, which wastes a cycle.
+          echo "--- source content assertions ---"
+          FAIL=0
+          check_src() {
+            if grep -q "$2" "$1"; then
+              echo "ok       $2"
+            else
+              echo "::error::missing in $1: $2"
+              FAIL=1
+            fi
+          }
+          check_src dxb/xnu/osfmk/arm64/arm_vm_init.c 'C1: trustcache PA rejected'
+          check_src dxb/xnu/osfmk/arm64/arm_vm_init.c 'C2: auxkc PA rejected'
+          check_src dxb/xnu/osfmk/arm64/arm_vm_init.c 'H1: phystokv illegal PA'
+          check_src dxb/xnu/osfmk/arm64/arm_vm_init.c 'F1: lck grp init'
+          check_src dxb/xnu/osfmk/arm64/arm_vm_init.c 'G1: init_ptpages done'
+          check_src dxb/xnu/osfmk/kern/compact_id.c 'compact id slot dirty'
+          [ $FAIL -eq 0 ] || rc=1
+
           exit $rc
 
       - name: Collect
