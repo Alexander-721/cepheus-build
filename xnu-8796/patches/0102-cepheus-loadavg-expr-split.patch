@@ -1,0 +1,17 @@
+diff --git a/osfmk/kern/sched_prim.c b/osfmk/kern/sched_prim.c
+index e5c3963..c4e50ae 100644
+--- a/osfmk/kern/sched_prim.c
++++ b/osfmk/kern/sched_prim.c
+@@ -8254,7 +8254,11 @@ sched_update_pset_load_average(processor_set_t pset, __unused uint64_t curtime)
+ 	cepheus_early_mark(20, "T1: simple load average enter");
+ 	int non_rt_load = pset->pset_runq.count;
+ 	cepheus_early_mark(20, "T1a: runq count read");
+-	int load = ((bit_count(pset->cpu_state_map[PROCESSOR_RUNNING]) + non_rt_load + rt_runq_count(pset)) << PSET_LOAD_NUMERATOR_SHIFT);
++	int running_count = bit_count(pset->cpu_state_map[PROCESSOR_RUNNING]);
++	cepheus_early_mark(20, "T1b1: bitcount done");
++	int rt_count = rt_runq_count(pset);
++	cepheus_early_mark(20, "T1b2: rt runq count done");
++	int load = ((running_count + non_rt_load + rt_count) << PSET_LOAD_NUMERATOR_SHIFT);
+ 	cepheus_early_mark(20, "T1b: load computed");
+ 	int new_load_average = ((int)pset->load_average + load) >> 1;
+ 	cepheus_early_mark(20, "T1c: averaging done");
