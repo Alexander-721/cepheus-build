@@ -1,0 +1,22 @@
+diff --git a/osfmk/arm64/arm_vm_init.c b/osfmk/arm64/arm_vm_init.c
+index f2999fe..407073e 100644
+--- a/osfmk/arm64/arm_vm_init.c
++++ b/osfmk/arm64/arm_vm_init.c
+@@ -2151,6 +2151,7 @@ arm_vm_init(uint64_t memory_size, boot_args * args)
+ 	 * With legacy 3 level table systems we never mapped more than a single L1 entry so this may be dead code
+ 	 */
+ 	init_ptpages(cpu_tte, dynamic_memory_begin, VM_MAX_KERNEL_ADDRESS, TRUE, ARM_DYNAMIC_TABLE_XN | ARM_TTE_TABLE_AP(ARM_TTE_TABLE_AP_USER_NA));
++	cepheus_early_mark(20, "G1: init_ptpages done");
+ #endif
+ 
+ #if KASAN
+@@ -2166,7 +2167,9 @@ arm_vm_init(uint64_t memory_size, boot_args * args)
+ 
+ 	arm_set_user_tbi();
+ 
++	cepheus_early_mark(20, "G2a: before physmap init");
+ 	arm_vm_physmap_init(args);
++	cepheus_early_mark(20, "G2b: after physmap init");
+ 	set_mmu_ttb_alternate(cpu_ttep & TTBR_BADDR_MASK);
+ 
+ 	ml_enable_monitor();
