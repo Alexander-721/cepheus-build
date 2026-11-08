@@ -1,22 +1,22 @@
 diff --git a/osfmk/arm64/arm_vm_init.c b/osfmk/arm64/arm_vm_init.c
-index f2999fe..cb4b3ad 100644
+index f2999fe..1cff1a6 100644
 --- a/osfmk/arm64/arm_vm_init.c
 +++ b/osfmk/arm64/arm_vm_init.c
-@@ -380,7 +380,8 @@ phystokv(pmap_paddr_t pa)
+@@ -380,8 +380,8 @@ phystokv(pmap_paddr_t pa)
  		}
  	}
  	if (__improbable((pa < gPhysBase) || ((pa - gPhysBase) >= real_phys_size))) {
 -		panic("%s: illegal PA: 0x%llx; phys base 0x%llx, size 0x%llx", __func__,
+-		    (unsigned long long)pa, (unsigned long long)gPhysBase, (unsigned long long)real_phys_size);
 +		cepheus_early_mark(20, "H1: phystokv illegal PA -> 0");
-+		return 0; phys base 0x%llx, size 0x%llx", __func__,
- 		    (unsigned long long)pa, (unsigned long long)gPhysBase, (unsigned long long)real_phys_size);
++		return 0;
  	}
  	return pa - gPhysBase + gVirtBase;
-@@ -1292,6 +1293,12 @@ arm_vm_prot_init(__unused boot_args * args)
+ }
+@@ -1292,6 +1292,11 @@ arm_vm_prot_init(__unused boot_args * args)
  
  		err = SecureDTGetProperty(memory_map, "TrustCache", (void const **)&trustCacheRange, &trustCacheRangeSize);
  		if (err == kSuccess) {
-+			/* CEPHEUS: reject a TrustCache range that is not in RAM. */
 +			if (trustCacheRange->paddr < gPhysBase ||
 +			    (trustCacheRange->paddr - gPhysBase) >= real_phys_size) {
 +				cepheus_early_mark(20, "C1: trustcache PA rejected");
@@ -25,7 +25,15 @@ index f2999fe..cb4b3ad 100644
  			if (trustCacheRangeSize != sizeof(DTMemoryMapRange)) {
  				panic("Unexpected /chosen/memory-map/TrustCache property size %u != %zu", trustCacheRangeSize, sizeof(DTMemoryMapRange));
  			}
-@@ -1349,7 +1356,12 @@ arm_vm_prot_init(__unused boot_args * args)
+@@ -1320,6 +1325,7 @@ arm_vm_prot_init(__unused boot_args * args)
+ 		}
+ 	}
+ 
++noTrustCache:
+ 	if (segSizeEXTRADATA != 0) {
+ 		if (segEXTRADATA <= segLOWEST) {
+ 			segLOWEST = segEXTRADATA;
+@@ -1349,7 +1355,12 @@ arm_vm_prot_init(__unused boot_args * args)
  	}
  	assert(auxKC_header_range_size == sizeof(DTMemoryMapRange));
  
