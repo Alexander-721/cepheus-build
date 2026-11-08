@@ -1,0 +1,22 @@
+diff --git a/osfmk/prng/prng_random.c b/osfmk/prng/prng_random.c
+index ba7c6e7..c09ecea 100644
+--- a/osfmk/prng/prng_random.c
++++ b/osfmk/prng/prng_random.c
+@@ -135,12 +135,17 @@ bootseed_init(void)
+ 	const struct ccdigest_info * di = &ccsha256_ltc_di;
+ 
+ 	ccdigest_di_decl(di, ctx);
++	cepheus_early_mark(20, "S1: digest declared");
+ 	ccdigest_init(di, ctx);
++	cepheus_early_mark(20, "S2: digest initialised");
+ 
+ 	bootseed_init_bootloader(di, ctx);
++	cepheus_early_mark(20, "S3: bootloader seed mixed");
+ 	bootseed_init_native(di, ctx);
+ 
++	cepheus_early_mark(20, "S4: before digest final");
+ 	ccdigest_final(di, ctx, bootseed);
++	cepheus_early_mark(20, "S5: digest final done");
+ 	ccdigest_di_clear(di, ctx);
+ }
+ 
