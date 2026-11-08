@@ -1,0 +1,46 @@
+diff --git a/osfmk/prng/prng_random.c b/osfmk/prng/prng_random.c
+index c52f0ab..6b5e4b6 100644
+--- a/osfmk/prng/prng_random.c
++++ b/osfmk/prng/prng_random.c
+@@ -1,3 +1,6 @@
++/* CEPHEUS bring-up: early console markers. */
++extern void cepheus_early_mark(unsigned int stage, const char *label);
++
+ /*
+  * Copyright (c) 2013 Apple Inc. All rights reserved.
+  *
+@@ -191,8 +194,10 @@ early_random(void)
+ 	const char ps[] = "xnu early random";
+ 	static int init = 0;
+ 
++	cepheus_early_mark(20, "E1: early_random enter");
+ 	if (init == 0) {
+ 		bootseed_init();
++		cepheus_early_mark(20, "E2: bootseed hashed");
+ 
+ 		/* Init DRBG for NIST HMAC */
+ 		ccdrbg_factory_nisthmac(&erandom.drbg_info, &erandom.drbg_custom);
+@@ -203,7 +208,9 @@ early_random(void)
+ 		 * and the cpu number as personalization.
+ 		 */
+ 		assert(sizeof(bootseed) > sizeof(nonce));
++		cepheus_early_mark(20, "E3: reading timebase");
+ 		nonce = ml_get_timebase();
++		cepheus_early_mark(20, "E4: timebase read");
+ 		rc = ccdrbg_init(&erandom.drbg_info, (struct ccdrbg_state *)erandom.drbg_state, sizeof(bootseed), bootseed, sizeof(nonce), &nonce, sizeof(ps) - 1, ps);
+ 		if (rc != CCDRBG_STATUS_OK) {
+ 			panic("ccdrbg_init() returned %d", rc);
+@@ -211,10 +218,13 @@ early_random(void)
+ 
+ 		cc_clear(sizeof(nonce), &nonce);
+ 
++		cepheus_early_mark(20, "E5: drbg initialised");
+ 		init = 1;
+ 	}
+ 
++	cepheus_early_mark(20, "E6: generating");
+ 	read_erandom(&result, sizeof(result));
++	cepheus_early_mark(20, "E7: random generated");
+ 
+ 	return result;
+ }
