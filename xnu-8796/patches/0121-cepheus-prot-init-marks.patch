@@ -1,0 +1,33 @@
+diff --git a/osfmk/arm64/arm_vm_init.c b/osfmk/arm64/arm_vm_init.c
+index f2999fe..4bcc377 100644
+--- a/osfmk/arm64/arm_vm_init.c
++++ b/osfmk/arm64/arm_vm_init.c
+@@ -1258,6 +1258,7 @@ arm_vm_prot_init(__unused boot_args * args)
+ 	segLOWEST = segLOWESTTEXT;
+ 	segLOWESTRO = segLOWESTTEXT;
+ 
++	cepheus_early_mark(20, "D1: before lowestKC block");
+ 	if (segLOWESTKC && segLOWESTKC < segLOWEST) {
+ 		/*
+ 		 * kernel collections have segments below the kernel. In particular the collection mach header
+@@ -1273,10 +1274,12 @@ arm_vm_prot_init(__unused boot_args * args)
+ 		}
+ 	}
+ 
++	cepheus_early_mark(20, "D2: lowestKC block done");
+ 	DTEntry memory_map;
+ 	int err;
+ 
+ 	// Device Tree portion of EXTRADATA
++	cepheus_early_mark(20, "D3: before extradata DT");
+ 	if (SecureDTIsLockedDown()) {
+ 		segEXTRADATA = (vm_offset_t)PE_state.deviceTreeHead;
+ 		segSizeEXTRADATA = PE_state.deviceTreeSize;
+@@ -1284,6 +1287,7 @@ arm_vm_prot_init(__unused boot_args * args)
+ 
+ 	// Trust Caches portion of EXTRADATA
+ 	{
++		cepheus_early_mark(20, "D4: before trustcache lookup");
+ 		DTMemoryMapRange const *trustCacheRange;
+ 		unsigned int trustCacheRangeSize;
+ 
