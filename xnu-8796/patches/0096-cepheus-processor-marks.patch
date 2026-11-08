@@ -1,0 +1,54 @@
+diff --git a/osfmk/kern/processor.c b/osfmk/kern/processor.c
+index aad9f3b..6b522d0 100644
+--- a/osfmk/kern/processor.c
++++ b/osfmk/kern/processor.c
+@@ -1,3 +1,6 @@
++/* CEPHEUS bring-up: early console markers. */
++extern void cepheus_early_mark(unsigned int stage, const char *label);
++
+ /*
+  * Copyright (c) 2000-2019 Apple Inc. All rights reserved.
+  *
+@@ -223,14 +226,18 @@ processor_bootstrap(void)
+ 	pset_node0.node_list = &pset_node1;
+ #endif
+ 
++	cepheus_early_mark(20, "P1: pset_init done");
+ 	pset_init(&pset0, &pset_node0);
+ 	queue_init(&tasks);
+ 	queue_init(&terminated_tasks);
+ 	queue_init(&threads);
+ 	queue_init(&terminated_threads);
+ 	queue_init(&corpse_tasks);
++	cepheus_early_mark(20, "P2: queues init done");
+ 
++	cepheus_early_mark(20, "P3: calling processor_init");
+ 	processor_init(master_processor, master_cpu, &pset0);
++	cepheus_early_mark(20, "P4: processor_init returned");
+ }
+ 
+ /*
+@@ -283,10 +290,15 @@ processor_init(
+ 		running_timer_clear(processor, i);
+ 	}
+ 	recount_processor_init(processor);
++	cepheus_early_mark(20, "P5: recount done");
+ 	simple_lock_init(&processor->start_state_lock, 0);
++	cepheus_early_mark(20, "P6: start_state_lock init");
+ 
++	cepheus_early_mark(20, "P7: before splsched");
+ 	s = splsched();
++	cepheus_early_mark(20, "P8: splsched done");
+ 	pset_lock(pset);
++	cepheus_early_mark(20, "P9: pset locked");
+ 	bit_set(pset->cpu_bitmask, cpu_id);
+ 	bit_set(pset->recommended_bitmask, cpu_id);
+ 	bit_set(pset->primary_map, cpu_id);
+@@ -298,6 +310,7 @@ processor_init(
+ 		pset->cpu_set_hi = (cpu_id > pset->cpu_set_hi)? cpu_id: pset->cpu_set_hi;
+ 	}
+ 	pset_unlock(pset);
++	cepheus_early_mark(20, "PA: pset unlocked");
+ 	splx(s);
+ 
+ 	simple_lock(&processor_list_lock, LCK_GRP_NULL);
