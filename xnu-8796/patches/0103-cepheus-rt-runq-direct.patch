@@ -1,0 +1,26 @@
+diff --git a/osfmk/kern/sched_prim.c b/osfmk/kern/sched_prim.c
+index c4e50ae..8958945 100644
+--- a/osfmk/kern/sched_prim.c
++++ b/osfmk/kern/sched_prim.c
+@@ -1,6 +1,9 @@
+ /* CEPHEUS bring-up: early console markers. */
+ extern void cepheus_early_mark(unsigned int stage, const char *label);
+ 
++/* CEPHEUS bring-up: early console markers. */
++extern void cepheus_early_mark(unsigned int stage, const char *label);
++
+ /*
+  * Copyright (c) 2000-2016 Apple Inc. All rights reserved.
+  *
+@@ -150,7 +153,10 @@ deadline_add(uint64_t d, uint64_t e)
+ int
+ rt_runq_count(processor_set_t pset)
+ {
+-	return os_atomic_load(&SCHED(rt_runq)(pset)->count, relaxed);
++	cepheus_early_mark(20, "T1b0: rt_runq_count enter");
++	int c = os_atomic_load(&pset->rt_runq.count, relaxed);
++	cepheus_early_mark(20, "T1b0: direct rt_runq read ok");
++	return c;
+ }
+ 
+ uint64_t
