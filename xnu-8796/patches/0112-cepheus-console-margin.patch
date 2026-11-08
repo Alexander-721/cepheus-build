@@ -1,0 +1,16 @@
+diff --git a/osfmk/arm64/cepheus_early.c b/osfmk/arm64/cepheus_early.c
+index eff7e66..c1c9d48 100644
+--- a/osfmk/arm64/cepheus_early.c
++++ b/osfmk/arm64/cepheus_early.c
+@@ -281,6 +281,11 @@ cepheus_early_video(uintptr_t base, unsigned int row_bytes,
+ 		early_height = height;
+ 		early_row_bytes = row_bytes;
+ 		early_rows = (height - EARLY_BAND) / EARLY_CELL_H;
++	/* CEPHEUS: keep a 6-row margin so the newest line is never hidden
++	 * behind the status band at the bottom of the screen. */
++	if (early_rows > 8) {
++		early_rows -= 6;
++	}
+ 		early_cols = width / EARLY_CELL_W;
+ 		early_row = 0;
+ 		early_col = 0;
