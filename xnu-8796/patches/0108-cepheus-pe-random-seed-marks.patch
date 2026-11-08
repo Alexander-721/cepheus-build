@@ -1,0 +1,29 @@
+diff --git a/pexpert/gen/pe_gen.c b/pexpert/gen/pe_gen.c
+index e1d1571..e59550f 100644
+--- a/pexpert/gen/pe_gen.c
++++ b/pexpert/gen/pe_gen.c
+@@ -1,3 +1,6 @@
++/* CEPHEUS bring-up: early console markers. */
++extern void cepheus_early_mark(unsigned int stage, const char *label);
++
+ /*
+  * Copyright (c) 2000-2021 Apple Computer, Inc. All rights reserved.
+  *
+@@ -144,11 +147,16 @@ PE_get_random_seed(unsigned char *dst_random_seed, uint32_t request_size)
+ 	uint32_t        size = 0;
+ 	void            *dt_random_seed;
+ 
+-	if ((SecureDTLookupEntry(NULL, "/chosen", &entryP) == kSuccess)
++	cepheus_early_mark(20, "R1a: seed lookup enter");
++	DTStatus dt_lookup_status = SecureDTLookupEntry(NULL, "/chosen", &entryP);
++	cepheus_early_mark(20, dt_lookup_status == kSuccess
++	    ? "R1b: chosen found" : "R1b: chosen missing");
++	if ((dt_lookup_status == kSuccess)
+ 	    && (SecureDTGetProperty(entryP, "random-seed",
+ 	    /* casting away the const is permissible here, since
+ 	     * this function runs before lockdown. */
+ 	    (const void **)(uintptr_t)&dt_random_seed, &size) == kSuccess)) {
++		cepheus_early_mark(20, "R1c: random-seed property found");
+ 		unsigned char *src_random_seed;
+ 		unsigned int i;
+ 		unsigned int null_count = 0;
