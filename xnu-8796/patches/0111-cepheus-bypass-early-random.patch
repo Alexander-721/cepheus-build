@@ -1,0 +1,31 @@
+diff --git a/osfmk/arm/arm_init.c b/osfmk/arm/arm_init.c
+index 77480a1..8979b41 100644
+--- a/osfmk/arm/arm_init.c
++++ b/osfmk/arm/arm_init.c
+@@ -785,7 +785,9 @@ extern const char cepheus_tag_fix[];
+ 	 * function, we do not risk failing the check even though
+ 	 * we mutate the guard word during execution.
+ 	 */
+-	__stack_chk_guard = (unsigned long)early_random();
++	/* CEPHEUS: deterministic stack-guard cookie; early_random() faults. */
++	cepheus_early_mark(20, "G1: fixed stack guard");
++	__stack_chk_guard = (unsigned long)0x9e3779b97f4a7c15ULL;
+ 	/* Zero a byte of the protector to guard
+ 	 * against string vulnerabilities
+ 	 */
+diff --git a/osfmk/arm64/arm_vm_init.c b/osfmk/arm64/arm_vm_init.c
+index c50e8b7..f2bc416 100644
+--- a/osfmk/arm64/arm_vm_init.c
++++ b/osfmk/arm64/arm_vm_init.c
+@@ -1875,7 +1875,10 @@ arm_vm_init(uint64_t memory_size, boot_args * args)
+ 
+ 	// Slide the physical aperture to a random page-aligned location within the slide range
+ 	cepheus_early_mark(20, "W1: physmap base computed");
+-	uint64_t physmap_slide = early_random() & ARM64_PHYSMAP_SLIDE_MASK & ~((uint64_t)PAGE_MASK);
++	/* CEPHEUS: early_random() is not usable yet (corecrypto fault), so use a
++	 * fixed slide instead of an ASLR-derived one. */
++	uint64_t physmap_slide = (ARM64_PHYSMAP_SLIDE_RANGE / 2) & ARM64_PHYSMAP_SLIDE_MASK & ~((uint64_t)PAGE_MASK);
++	cepheus_early_mark(20, "W1b: fixed physmap slide");
+ 	assert(physmap_slide < ARM64_PHYSMAP_SLIDE_RANGE);
+ 
+ 	physmap_base += physmap_slide;
