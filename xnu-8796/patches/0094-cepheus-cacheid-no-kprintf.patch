@@ -1,0 +1,42 @@
+diff --git a/osfmk/arm/cpuid.c b/osfmk/arm/cpuid.c
+index ab3b284..15de389 100644
+--- a/osfmk/arm/cpuid.c
++++ b/osfmk/arm/cpuid.c
+@@ -404,7 +404,7 @@ do_cacheid(void)
+ 		 * cache geometries (3MB)?
+ 		 */
+ 		vm_cache_geometry_colors = ((arm_cache_ccsidr_info.bits.NumSets + 1) * cpuid_cache_info_p->c_linesz) / PAGE_SIZE;
+-		kprintf(" vm_cache_geometry_colors: %d\n", vm_cache_geometry_colors);
++		cepheus_early_mark(20, "Y5: geometry colors set");
+ 	} else {
+ 		cpuid_cache_info_p->c_l2size = 0;
+ 
+@@ -421,25 +421,18 @@ do_cacheid(void)
+ 		cpuid_cache_info_p->c_isize = (arm_cache_ccsidr_info.bits.NumSets + 1) * c_linesz * c_assoc;
+ 	}
+ 
++	cepheus_early_mark(20, "Y6: before valid flag");
+ 	if (cpuid_cache_info_p == cpuid_cache_info_boot_cpu) {
+ 		cpuid_cache_info_p->c_valid = true;
+ 	} else {
++		cepheus_early_mark(20, "Y7: taking rw lock");
+ 		lck_rw_lock_exclusive(&cpuid_cache_info_lck_rw);
+ 		cpuid_cache_info_p->c_valid = true;
+ 		thread_wakeup((event_t)&cpuid_cache_info_p->c_valid);
+ 		lck_rw_unlock_exclusive(&cpuid_cache_info_lck_rw);
+ 	}
+ 
+-	kprintf("%s() - %u bytes %s cache (I:%u D:%u (%s)), %u-way assoc, %u bytes/line\n",
+-	    __FUNCTION__,
+-	    cpuid_cache_info_p->c_dsize + cpuid_cache_info_p->c_isize,
+-	    ((cpuid_cache_info_p->c_type == CACHE_WRITE_BACK) ? "WB" :
+-	    (cpuid_cache_info_p->c_type == CACHE_WRITE_THROUGH ? "WT" : "Unknown")),
+-	    cpuid_cache_info_p->c_isize,
+-	    cpuid_cache_info_p->c_dsize,
+-	    (cpuid_cache_info_p->c_unified) ? "unified" : "separate",
+-	    cpuid_cache_info_p->c_assoc,
+-	    cpuid_cache_info_p->c_linesz);
++	cepheus_early_mark(20, "Y8: cache info reported");
+ 	cepheus_early_mark(20, "Z: cacheid done");
+ 
+ }
