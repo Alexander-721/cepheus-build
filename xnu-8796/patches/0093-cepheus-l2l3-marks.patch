@@ -1,0 +1,32 @@
+diff --git a/osfmk/arm/cpuid.c b/osfmk/arm/cpuid.c
+index 7e05649..ab3b284 100644
+--- a/osfmk/arm/cpuid.c
++++ b/osfmk/arm/cpuid.c
+@@ -361,19 +361,27 @@ do_cacheid(void)
+ 
+ 	/* D cache size */
+ 	cpuid_cache_info_p->c_dsize = (arm_cache_ccsidr_info.bits.NumSets + 1) * cpuid_cache_info_p->c_linesz * cpuid_cache_info_p->c_assoc;
++	cepheus_early_mark(20, "Y1: L1 info written");
+ 
+ 
++	cepheus_early_mark(20, (arm_cache_clidr_info.bits.Ctype3 == 0x4 ||
++	    arm_cache_clidr_info.bits.Ctype2 == 0x4 || arm_cache_clidr_info.bits.Ctype2 == 0x2)
++	    ? "Y2: L2 branch taken" : "Y2: no L2 branch");
+ 	if ((arm_cache_clidr_info.bits.Ctype3 == 0x4) ||
+ 	    (arm_cache_clidr_info.bits.Ctype2 == 0x4) || (arm_cache_clidr_info.bits.Ctype2 == 0x2)) {
+ 		if (arm_cache_clidr_info.bits.Ctype3 == 0x4) {
+ 			/* Select L3 (LLC) if the SoC is new enough to have that.
+ 			 * This will be the second-level cache for the highest-performing ACC. */
+ 			machine_write_csselr(CSSELR_L3, CSSELR_DATA_UNIFIED);
++			cepheus_early_mark(20, "Y3: wrote CSSELR L3");
+ 		} else {
+ 			/* Select L2 data cache */
+ 			machine_write_csselr(CSSELR_L2, CSSELR_DATA_UNIFIED);
++			cepheus_early_mark(20, "Y3: wrote CSSELR L2");
+ 		}
++		cepheus_early_mark(20, "Y4: before 2nd read ccsidr");
+ 		arm_cache_ccsidr_info.value = machine_read_ccsidr();
++		cepheus_early_mark(20, "Y4: after 2nd read ccsidr");
+ 
+ 		cpuid_cache_info_p->c_linesz = 4 * (1 << (arm_cache_ccsidr_info.bits.LineSize + 2));
+ 		cpuid_cache_info_p->c_assoc = (arm_cache_ccsidr_info.bits.Assoc + 1);
