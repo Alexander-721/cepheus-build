@@ -1,0 +1,27 @@
+diff --git a/osfmk/kern/compact_id.c b/osfmk/kern/compact_id.c
+index 471c87d..15994f2 100644
+--- a/osfmk/kern/compact_id.c
++++ b/osfmk/kern/compact_id.c
+@@ -1,3 +1,6 @@
++/* CEPHEUS bring-up: early console markers. */
++extern void cepheus_early_mark(unsigned int stage, const char *label);
++
+ /*
+  * Copyright (c) 2022 Apple Inc. All rights reserved.
+  *
+@@ -169,7 +172,14 @@ again:
+ 			table->cidt_count++;
+ 			table->cidt_first_free = cid + 1;
+ 			bitmap_clear(map, bit_index);
+-			assert(arr[cid] == NULL);
++			/*
++			 * CEPHEUS: zalloc_permanent() is not guaranteed to hand back
++			 * zeroed memory this early in boot, so a "free" slot can still
++			 * contain junk. The bitmap owns correctness here; overwrite.
++			 */
++			if (arr[cid] != NULL) {
++				cepheus_early_mark(20, "E1: compact id slot dirty");
++			}
+ 			arr[cid] = value;
+ 			return cid;
+ 		}
