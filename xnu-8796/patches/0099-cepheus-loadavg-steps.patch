@@ -1,0 +1,53 @@
+diff --git a/osfmk/kern/sched_prim.c b/osfmk/kern/sched_prim.c
+index 8e29586..e0a3db3 100644
+--- a/osfmk/kern/sched_prim.c
++++ b/osfmk/kern/sched_prim.c
+@@ -1,3 +1,6 @@
++/* CEPHEUS bring-up: early console markers. */
++extern void cepheus_early_mark(unsigned int stage, const char *label);
++
+ /*
+  * Copyright (c) 2000-2016 Apple Inc. All rights reserved.
+  *
+@@ -8114,6 +8117,7 @@ void
+ sched_update_pset_load_average(processor_set_t pset, uint64_t curtime)
+ {
+ 	int avail_cpu_count = pset_available_cpu_count(pset);
++	cepheus_early_mark(20, avail_cpu_count == 0 ? "S1: no available cpu" : "S1: cpus available");
+ 	if (avail_cpu_count == 0) {
+ 		/* Looks like the pset is not runnable any more; nothing to do here */
+ 		return;
+@@ -8128,6 +8132,7 @@ sched_update_pset_load_average(processor_set_t pset, uint64_t curtime)
+ 
+ 	if (!curtime) {
+ 		curtime = mach_absolute_time();
++		cepheus_early_mark(20, "S2: mach_absolute_time returned");
+ 	}
+ 	uint64_t last_update = os_atomic_load(&pset->pset_load_last_update, relaxed);
+ 	int64_t delta_ticks = curtime - last_update;
+@@ -8136,7 +8141,9 @@ sched_update_pset_load_average(processor_set_t pset, uint64_t curtime)
+ 	}
+ 
+ 	uint64_t delta_nsecs = 0;
++	cepheus_early_mark(20, "S3: converting ticks");
+ 	absolutetime_to_nanoseconds(delta_ticks, &delta_nsecs);
++	cepheus_early_mark(20, "S4: ticks converted");
+ 
+ 	if (__improbable(delta_nsecs > UINT32_MAX)) {
+ 		delta_nsecs = UINT32_MAX;
+@@ -8157,6 +8164,7 @@ sched_update_pset_load_average(processor_set_t pset, uint64_t curtime)
+ 
+ 	uint32_t running_higher[TH_BUCKET_SCHED_MAX] = {0};
+ 	sched_edge_pset_running_higher_bucket(pset, running_higher);
++	cepheus_early_mark(20, "S5: running-higher buckets done");
+ 
+ 	for (sched_bucket_t sched_bucket = TH_BUCKET_FIXPRI; sched_bucket < TH_BUCKET_SCHED_MAX; sched_bucket++) {
+ 		uint64_t old_load_average = os_atomic_load(&pset->pset_load_average[sched_bucket], relaxed);
+@@ -8191,6 +8199,7 @@ sched_update_pset_load_average(processor_set_t pset, uint64_t curtime)
+ 		}
+ 	}
+ 	os_atomic_store(&pset->pset_load_last_update, curtime, relaxed);
++	cepheus_early_mark(20, "S6: load average stored");
+ }
+ 
+ void
