@@ -1,11 +1,11 @@
 diff --git a/osfmk/arm64/arm_vm_init.c b/osfmk/arm64/arm_vm_init.c
-index f2999fe..22ce3a2 100644
+index f2999fe..5fa5efd 100644
 --- a/osfmk/arm64/arm_vm_init.c
 +++ b/osfmk/arm64/arm_vm_init.c
-@@ -1834,6 +1834,32 @@ arm_vm_init(uint64_t memory_size, boot_args * args)
- 	/*
- 	 * Get the virtual and physical kernel-managed memory base from boot_args.
- 	 */
+@@ -1821,6 +1821,32 @@ init_ptpages(tt_entry_t *tt, vm_map_address_t start, vm_map_address_t end, bool
+ void
+ arm_vm_init(uint64_t memory_size, boot_args * args)
+ {
 +	{
 +		static const char ceph_hx[] = "0123456789abcdef";
 +		static const char *ceph_names[4] = { "virt", "phys", "size", "top " };
@@ -32,6 +32,6 @@ index f2999fe..22ce3a2 100644
 +			cepheus_early_putc('\n');
 +		}
 +	}
- 	gVirtBase = args->virtBase;
- 	cepheus_early_mark(20, "V1: arm_vm_init entered");
- 	gPhysBase = args->physBase;
+ 	vm_map_address_t va_l1, va_l1_end;
+ 	tt_entry_t       *cpu_l1_tte;
+ 	vm_map_address_t va_l2, va_l2_end;
