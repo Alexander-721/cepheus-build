@@ -1,0 +1,27 @@
+diff --git a/osfmk/kern/sched_prim.c b/osfmk/kern/sched_prim.c
+index e0a3db3..02c1dbf 100644
+--- a/osfmk/kern/sched_prim.c
++++ b/osfmk/kern/sched_prim.c
+@@ -8251,18 +8251,15 @@ sched_pset_cluster_shared_rsrc_load(processor_set_t pset, cluster_shared_rsrc_ty
+ void
+ sched_update_pset_load_average(processor_set_t pset, __unused uint64_t curtime)
+ {
++	cepheus_early_mark(20, "T1: simple load average enter");
+ 	int non_rt_load = pset->pset_runq.count;
+ 	int load = ((bit_count(pset->cpu_state_map[PROCESSOR_RUNNING]) + non_rt_load + rt_runq_count(pset)) << PSET_LOAD_NUMERATOR_SHIFT);
+ 	int new_load_average = ((int)pset->load_average + load) >> 1;
+ 
++	cepheus_early_mark(20, "T2: about to store load");
+ 	pset->load_average = new_load_average;
+-#if (DEVELOPMENT || DEBUG)
+-#if __AMP__
+-	if (pset->pset_cluster_type == PSET_AMP_P) {
+-		KTRC(MACHDBG_CODE(DBG_MACH_SCHED, MACH_PSET_LOAD_AVERAGE) | DBG_FUNC_NONE, sched_get_pset_load_average(pset, 0), (bit_count(pset->cpu_state_map[PROCESSOR_RUNNING]) + pset->pset_runq.count + rt_runq_count(pset)));
+-	}
+-#endif
+-#endif
++	cepheus_early_mark(20, "T3: load stored");
++	cepheus_early_mark(20, "T4: ktrc skipped");
+ }
+ 
+ void
