@@ -1,5 +1,5 @@
 diff --git a/pexpert/gen/pe_gen.c b/pexpert/gen/pe_gen.c
-index e1d1571..e59550f 100644
+index e1d1571..ab4e40f 100644
 --- a/pexpert/gen/pe_gen.c
 +++ b/pexpert/gen/pe_gen.c
 @@ -1,3 +1,6 @@
@@ -15,7 +15,7 @@ index e1d1571..e59550f 100644
  
 -	if ((SecureDTLookupEntry(NULL, "/chosen", &entryP) == kSuccess)
 +	cepheus_early_mark(20, "R1a: seed lookup enter");
-+	DTStatus dt_lookup_status = SecureDTLookupEntry(NULL, "/chosen", &entryP);
++	int dt_lookup_status = SecureDTLookupEntry(NULL, "/chosen", &entryP);
 +	cepheus_early_mark(20, dt_lookup_status == kSuccess
 +	    ? "R1b: chosen found" : "R1b: chosen missing");
 +	if ((dt_lookup_status == kSuccess)
