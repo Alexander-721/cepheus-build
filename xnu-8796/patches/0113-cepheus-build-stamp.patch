@@ -1,0 +1,12 @@
+diff --git a/osfmk/arm/arm_init.c b/osfmk/arm/arm_init.c
+index 8715332..3032207 100644
+--- a/osfmk/arm/arm_init.c
++++ b/osfmk/arm/arm_init.c
+@@ -415,6 +415,7 @@ extern unsigned long cepheus_args_copy[512];
+ extern const char cepheus_tag_dt[];
+ extern const char cepheus_tag_fix[];
+ 	cepheus_early_mark(1, "arm_init entered (MMU on)");
++	cepheus_early_mark(20, "BUILD C3");
+ #if defined(CEPHEUS)
+ 	/*
+ 	 * args here is the PA snapshot start.s took (the KVA translation of
