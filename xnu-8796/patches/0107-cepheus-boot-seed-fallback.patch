@@ -1,0 +1,25 @@
+diff --git a/osfmk/prng/prng_random.c b/osfmk/prng/prng_random.c
+index 6b5e4b6..ba7c6e7 100644
+--- a/osfmk/prng/prng_random.c
++++ b/osfmk/prng/prng_random.c
+@@ -61,10 +61,17 @@ bootseed_init_bootloader(const struct ccdigest_info * di, ccdigest_ctx_t ctx)
+ 	n = PE_get_random_seed(seed, sizeof(seed));
+ 	if (n < sizeof(seed)) {
+ 		/*
+-		 * Insufficient entropy is fatal.  We must fill the
+-		 * entire entropy buffer during initializaton.
++		 * CEPHEUS bring-up: the device tree we hand the kernel has no
++		 * /chosen:random-seed property, so the bootloader seed is absent.
++		 * Mix a deterministic pattern instead of panicking; the early
++		 * console cannot show the panic and every later stage needs the
++		 * DRBG to initialise. Replace with a real seed before shipping.
+ 		 */
+-		panic("Expected %lu seed bytes from bootloader, but got %u.", sizeof(seed), n);
++		cepheus_early_mark(20, "E1b: no boot seed, using fallback");
++		for (uint32_t i = n; i < sizeof(seed); i++) {
++			seed[i] = (uint8_t)((i * 37u) ^ 0x5au) | 1u;
++		}
++		n = sizeof(seed);
+ 	}
+ 
+ 	ccdigest_update(di, ctx, sizeof(seed), seed);
