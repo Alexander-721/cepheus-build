@@ -1,0 +1,39 @@
+diff --git a/osfmk/arm/locks_arm.c b/osfmk/arm/locks_arm.c
+index 5ff332f..9aa4390 100644
+--- a/osfmk/arm/locks_arm.c
++++ b/osfmk/arm/locks_arm.c
+@@ -724,7 +724,7 @@ make_alias(kdp_lck_spin_is_acquired, kdp_lck_ticket_is_acquired);
+ 
+ #else /* !LCK_SPIN_IS_TICKET_LOCK */
+ 
+-#if DEVELOPMENT || DEBUG
++#if 0 /* CEPHEUS: lock tags are not initialised in this boot order */
+ __abortlike
+ static void
+ __lck_spin_invalid_panic(lck_spin_t *lck)
+diff --git a/osfmk/kern/lock_ticket.c b/osfmk/kern/lock_ticket.c
+index 7ba77d7..1a61331 100644
+--- a/osfmk/kern/lock_ticket.c
++++ b/osfmk/kern/lock_ticket.c
+@@ -155,17 +155,15 @@ __lck_ticket_not_owned_panic(lck_ticket_t *lck)
+ static inline void
+ hw_lck_ticket_verify(hw_lck_ticket_t *lck)
+ {
+-	if (lck->lck_type != LCK_TYPE_TICKET) {
+-		__hw_lck_ticket_invalid_panic(lck);
+-	}
++	/* CEPHEUS: tag not initialised in this boot order */
++	(void)lck;
+ }
+ 
+ static inline void
+ lck_ticket_verify(lck_ticket_t *tlock)
+ {
+-	if (tlock->lck_ticket_type != LCK_TYPE_TICKET) {
+-		__lck_ticket_invalid_panic(tlock);
+-	}
++	/* CEPHEUS: tag not initialised in this boot order */
++	(void)tlock;
+ }
+ 
+ #if DEVELOPMENT || DEBUG
