@@ -165,6 +165,7 @@ jobs:
           check_src dxb/xnu/osfmk/arm64/arm_vm_init.c 'C2: auxkc PA rejected'
           check_src dxb/xnu/osfmk/arm64/arm_vm_init.c 'H1: phystokv illegal PA'
           check_src dxb/xnu/osfmk/arm/pmap/pmap.c 'F1: lck grp init'
+          check_src dxb/xnu/osfmk/arm64/arm_vm_init.c 'E2: trustcache block done'
           check_src dxb/xnu/osfmk/arm64/arm_vm_init.c 'G1: init_ptpages done'
           check_src dxb/xnu/osfmk/arm64/arm_vm_init.c 'G2b: after physmap init'
           check_src dxb/xnu/osfmk/kern/compact_id.c 'compact id slot dirty'

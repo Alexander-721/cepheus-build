@@ -1,0 +1,22 @@
+diff --git a/osfmk/arm64/arm_vm_init.c b/osfmk/arm64/arm_vm_init.c
+index f2999fe..38414a1 100644
+--- a/osfmk/arm64/arm_vm_init.c
++++ b/osfmk/arm64/arm_vm_init.c
+@@ -1320,6 +1320,7 @@ arm_vm_prot_init(__unused boot_args * args)
+ 		}
+ 	}
+ 
++	cepheus_early_mark(20, "E2: trustcache block done");
+ 	if (segSizeEXTRADATA != 0) {
+ 		if (segEXTRADATA <= segLOWEST) {
+ 			segLOWEST = segEXTRADATA;
+@@ -1330,7 +1331,9 @@ arm_vm_prot_init(__unused boot_args * args)
+ 			panic("EXTRADATA is in an unexpected place: %#lx > %#lx", segEXTRADATA, segLOWEST);
+ 		}
+ 
++		cepheus_early_mark(20, "E3: before extradata map");
+ 		arm_vm_page_granular_RNX(segEXTRADATA, segSizeEXTRADATA, ARM64_GRANULE_ALLOW_BLOCK | ARM64_GRANULE_ALLOW_HINT);
++		cepheus_early_mark(20, "E4: after extradata map");
+ 	}
+ 
+ 	const DTMemoryMapRange *auxKC_range, *auxKC_header_range;
