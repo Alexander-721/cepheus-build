@@ -1,0 +1,41 @@
+diff --git a/osfmk/arm64/arm_vm_init.c b/osfmk/arm64/arm_vm_init.c
+index f2999fe..265f760 100644
+--- a/osfmk/arm64/arm_vm_init.c
++++ b/osfmk/arm64/arm_vm_init.c
+@@ -1830,6 +1830,7 @@ arm_vm_init(uint64_t memory_size, boot_args * args)
+ 	uint64_t         mem_segments;
+ 	vm_offset_t      ptpage_vaddr;
+ 	vm_map_address_t dynamic_memory_begin;
++	boolean_t ceph_keep_ttbr0 = FALSE;
+ 
+ 	/*
+ 	 * Get the virtual and physical kernel-managed memory base from boot_args.
+@@ -2207,20 +2208,23 @@ arm_vm_init(uint64_t memory_size, boot_args * args)
+ 	} else {
+ 		cepheus_early_fb_report(early_fb_pa, early_fb_bytes,
+ 		    ptov_table[0].pa, ptov_table[0].len);
+-		cepheus_early_mark(8, "fb outside physmap; console off");
+-		cepheus_early_disable();
++		cepheus_early_mark(8, "fb unmapped; keep TTBR0 for console");
++		ceph_keep_ttbr0 = TRUE;
+ 	}
+ #else
+ 	cepheus_early_disable();
+ #endif
+-	set_mmu_ttb(invalid_ttep & TTBR_BADDR_MASK);
++	if (!ceph_keep_ttbr0) {
++		set_mmu_ttb(invalid_ttep & TTBR_BADDR_MASK);
+ 
+-	flush_mmu_tlb();
++		flush_mmu_tlb();
++	}
+ 	kva_active = TRUE;
+ 	// global table pointers may need to be different due to physical aperture remapping
+ 	cpu_tte = (tt_entry_t*)(phystokv(cpu_ttep));
+ 	invalid_tte = (tt_entry_t*)(phystokv(invalid_ttep));
+-	cepheus_early_mark(10, "TTBR0 off; TLB flushed");
++	cepheus_early_mark(10, ceph_keep_ttbr0
++	    ? "TTBR0 kept for console" : "TTBR0 off; TLB flushed");
+ 
+ 	// From here on out, we're off the bootstrap translation tables.
+ 
