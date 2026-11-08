@@ -1,0 +1,15 @@
+diff --git a/osfmk/arm64/arm_vm_init.c b/osfmk/arm64/arm_vm_init.c
+index 3396139..15fffd9 100644
+--- a/osfmk/arm64/arm_vm_init.c
++++ b/osfmk/arm64/arm_vm_init.c
+@@ -1800,7 +1800,9 @@ init_ptpages(tt_entry_t *tt, vm_map_address_t start, vm_map_address_t end, bool
+ 			/* Allocate a page and setup L1 Table TTE in L1 */
+ 			ptpage_vaddr = alloc_ptpage(static_map);
+ 			*l1_tte = (kvtophys(ptpage_vaddr) & ARM_TTE_TABLE_MASK) | ARM_TTE_TYPE_TABLE | ARM_TTE_VALID | table_attrs;
+-			bzero((void *)ptpage_vaddr, ARM_PGBYTES);
++			cepheus_early_mark(20, "B7: kvtophys of ptpage done");
++	bzero((void *)ptpage_vaddr, ARM_PGBYTES);
++	cepheus_early_mark(20, "B8: ptpage zeroed");
+ 		}
+ 
+ 		if ((start + ARM_TT_L1_SIZE) < start) {
