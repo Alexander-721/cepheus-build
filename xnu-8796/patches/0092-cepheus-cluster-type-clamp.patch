@@ -1,0 +1,16 @@
+diff --git a/osfmk/arm/cpuid.c b/osfmk/arm/cpuid.c
+index 875a025..7e05649 100644
+--- a/osfmk/arm/cpuid.c
++++ b/osfmk/arm/cpuid.c
+@@ -300,6 +300,11 @@ do_cacheid(void)
+ 	 */
+ 	cepheus_early_mark(20, "S: cacheid enter");
+ 	cluster_type_t cluster_type = ml_get_topology_info()->cpus[ml_get_cpu_number_local()].cluster_type;
++	cepheus_early_mark(20, (cluster_type >= 0 && cluster_type < MAX_CPU_TYPES)
++	    ? "T2: cluster in range" : "T2: cluster OUT OF RANGE");
++	if (cluster_type < 0 || cluster_type >= MAX_CPU_TYPES) {
++		cluster_type = CLUSTER_TYPE_SMP;
++	}
+ 	uint8_t prev_cpuid_cache_info_bitmap = os_atomic_or_orig(&cpuid_cache_info_bitmap,
+ 	    (uint8_t)(1 << cluster_type), acq_rel);
+ 	cepheus_early_mark(20, "T: after atomic or");
