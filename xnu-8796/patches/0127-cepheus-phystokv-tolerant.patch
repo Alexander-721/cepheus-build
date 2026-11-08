@@ -1,0 +1,21 @@
+diff --git a/osfmk/arm64/arm_vm_init.c b/osfmk/arm64/arm_vm_init.c
+index f2999fe..4787f65 100644
+--- a/osfmk/arm64/arm_vm_init.c
++++ b/osfmk/arm64/arm_vm_init.c
+@@ -380,8 +380,14 @@ phystokv(pmap_paddr_t pa)
+ 		}
+ 	}
+ 	if (__improbable((pa < gPhysBase) || ((pa - gPhysBase) >= real_phys_size))) {
+-		panic("%s: illegal PA: 0x%llx; phys base 0x%llx, size 0x%llx", __func__,
+-		    (unsigned long long)pa, (unsigned long long)gPhysBase, (unsigned long long)real_phys_size);
++		/*
++		 * CEPHEUS: the device tree we supply carries ranges XNU would normally
++		 * trust (TrustCache, AuxKC and friends). Converting one of those used to
++		 * panic deep inside boot, which is useless for bring-up: report it and
++		 * return 0 so the caller's own "absent" path runs instead.
++		 */
++		cepheus_early_mark(20, "H1: phystokv illegal PA -> 0");
++		return 0;
+ 	}
+ 	return pa - gPhysBase + gVirtBase;
+ }
